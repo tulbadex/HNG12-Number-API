@@ -12,7 +12,7 @@ This is a simple PHP API that classifies numbers based on their properties (Arms
 ## 📥 Installation
 1. Clone the repository:
    ```sh
-   git clone https://github.com/yourusername/number-classification-api.git
+   git clone https://github.com/tulbadex/HNG12-Number-API.git
    cd number-classification-api
    ```
 
