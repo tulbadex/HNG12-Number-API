@@ -1,91 +1,78 @@
 <?php
-header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
+header('Content-Type: application/json');
 
-// Ensure the script is only accessible via /api/classify-number
-$request_uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-
-if ($request_uri !== '/api/classify-number') {
-    http_response_code(404);
-    echo json_encode(["error" => true, "message" => "Invalid endpoint"]);
-    exit;
+function isArmstrong($num) {
+    $sum = 0;
+    $digits = str_split($num);
+    $power = strlen($num);
+    foreach ($digits as $digit) {
+        $sum += pow($digit, $power);
+    }
+    return $sum == $num;
 }
 
-function is_prime($num) {
-    if ($num <= 1) return false;
-    if ($num <= 3) return true;
-    if ($num % 2 === 0 || $num % 3 === 0) return false;
-    for ($i = 5; $i * $i <= $num; $i += 2) {
-        if ($num % $i === 0) return false;
+function isPrime($num) {
+    if ($num < 2) return false;
+    for ($i = 2; $i <= sqrt($num); $i++) {
+        if ($num % $i == 0) return false;
     }
     return true;
 }
 
-function is_perfect($num) {
+function isPerfect($num) {
     if ($num <= 1) return false;
-    $sum = 1;
-    for ($i = 2; $i * $i <= $num; $i++) {
-        if ($num % $i === 0) {
-            $sum += $i;
-            if ($i !== $num / $i) $sum += $num / $i;
-        }
+    $sum = 0;
+    for ($i = 1; $i < $num; $i++) {
+        if ($num % $i == 0) $sum += $i;
     }
-    return $sum === $num;
+    return $sum == $num;
 }
 
-function is_armstrong($num) {
-    if ($num < 0) return false;
-    $digits = str_split($num);
-    $power = count($digits);
-    $sum = array_sum(array_map(fn($d) => pow($d, $power), $digits));
-    return $sum === $num;
+function getProperties($num) {
+    $properties = [];
+    if (isArmstrong($num)) {
+        $properties[] = "armstrong";
+    }
+    $properties[] = ($num % 2) ? "odd" : "even";
+    return $properties;
 }
 
-function get_fun_fact($num) {
-    $api_url = "http://numbersapi.com/{$num}/math?json";
+function getDigitSum($num) {
+    return array_sum(str_split($num));
+}
 
-    $context = stream_context_create([
-        "http" => ["ignore_errors" => true] // Ensure graceful handling of failures
-    ]);
+function getFunFact($num) {
+    $url = "http://numbersapi.com/{$num}/math";
+    $fact = @file_get_contents($url);
+    return $fact ?: "$num is a number";
+}
 
-    $response = @file_get_contents($api_url, false, $context);
-
-    if ($response === false) {
-        return "No fun fact available";
+if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+    $number = $_GET['number'] ?? null;
+    
+    if ($number === null || !is_numeric($number)) {
+        http_response_code(400);
+        echo json_encode([
+            'number' => $number ?? 'undefined',
+            'error' => true
+        ]);
+        exit;
     }
 
-    $data = json_decode($response, true);
-    return isset($data['text']) ? $data['text'] : "No fun fact available";
+    $number = (int)$number;
+    
+    $response = [
+        'number' => $number,
+        'is_prime' => isPrime($number),
+        'is_perfect' => isPerfect($number),
+        'properties' => getProperties($number),
+        'digit_sum' => getDigitSum($number),
+        'fun_fact' => getFunFact($number)
+    ];
+
+    echo json_encode($response);
+} else {
+    http_response_code(405);
+    echo json_encode(['error' => 'Method not allowed']);
 }
-
-// Validate input
-if (!isset($_GET['number']) || !ctype_digit($_GET['number'])) {
-    http_response_code(400);
-    echo json_encode([
-        "error" => true,
-        "message" => "Invalid input. Please provide a positive integer.",
-        "number" => $_GET['number'] ?? null
-    ]);
-    exit;
-}
-
-$number = intval($_GET['number']);
-$properties = [];
-
-if (is_prime($number)) $properties[] = "prime";
-if (is_perfect($number)) $properties[] = "perfect";
-if (is_armstrong($number)) $properties[] = "armstrong";
-$properties[] = ($number % 2 === 0) ? "even" : "odd";
-
-$response = [
-    "number" => $number,
-    "is_prime" => is_prime($number),
-    "is_perfect" => is_perfect($number),
-    "properties" => $properties,
-    "digit_sum" => array_sum(str_split($number)),
-    "fun_fact" => get_fun_fact($number)
-];
-
-http_response_code(200);
-echo json_encode($response, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-?>
