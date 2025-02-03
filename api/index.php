@@ -1,6 +1,6 @@
 <?php
 header('Access-Control-Allow-Origin: *');
-header('Content-Type: application/json');
+header('Content-Type: application/json; charset=utf-8');
 
 function isArmstrong($num) {
     $sum = 0;
@@ -44,23 +44,26 @@ function getDigitSum($num) {
 
 function getFunFact($num) {
     $url = "http://numbersapi.com/{$num}/math";
-    $fact = @file_get_contents($url);
-    return $fact ?: "$num is a number";
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    $fact = curl_exec($ch);
+    curl_close($ch);
+    
+    return $fact ? trim($fact) : "$num is a number";
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-    $number = $_GET['number'] ?? null;
-    
-    if ($number === null || !is_numeric($number)) {
+    if (!isset($_GET['number']) || !is_numeric($_GET['number'])) {
         http_response_code(400);
         echo json_encode([
-            'number' => $number ?? 'undefined',
+            'number' => $_GET['number'] ?? "undefined",
             'error' => true
-        ]);
+        ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         exit;
     }
 
-    $number = (int)$number;
+    $number = (int)$_GET['number'];
     
     $response = [
         'number' => $number,
@@ -71,8 +74,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         'fun_fact' => getFunFact($number)
     ];
 
-    echo json_encode($response);
+    echo json_encode($response, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 } else {
     http_response_code(405);
-    echo json_encode(['error' => 'Method not allowed']);
+    echo json_encode(['error' => 'Method not allowed'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 }
