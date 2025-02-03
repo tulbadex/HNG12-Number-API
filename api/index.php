@@ -1,8 +1,7 @@
 <?php
 // Set headers for CORS and JSON response
 header("Content-Type: application/json");
-// Handle CORS
-header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Origin: *"); // Handle CORS
 
 // Function to check if a number is prime
 function isPrime($num) {
@@ -84,4 +83,3 @@ if (isset($_GET['number']) && is_numeric($_GET['number'])) {
         "error" => true
     ], JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
 }
-?>
