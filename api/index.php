@@ -64,5 +64,5 @@ $response = [
     "fun_fact" => get_fun_fact($number)
 ];
 
-echo json_encode($response, JSON_PRETTY_PRINT);
+echo json_encode($response);
 ?>
