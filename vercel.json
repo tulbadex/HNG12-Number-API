@@ -5,7 +5,10 @@
       }
     },
     "routes": [
-        { "src": "/api/classify-number", "dest": "/api/index.php" }
+        { 
+          "src": "/api/classify-number", 
+          "dest": "/api/index.php" 
+        }
     ],
     "build": {
       "env": {
