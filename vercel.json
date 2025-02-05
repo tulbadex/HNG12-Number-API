@@ -1,19 +1,21 @@
 {
-    "functions": {
-      "api/**/*.php": {
-        "runtime": "vercel-php@0.7.3"
-      }
-    },
-    "routes": [
-        { 
-          "src": "/api/classify-number", 
-          "dest": "/api/index.php" 
-        }
-    ],
-    "build": {
-      "env": {
-        "NOW_PHP_DEBUG": "1"
-      }
+  "functions": {
+    "api/**/*.php": {
+      "runtime": "vercel-php@0.7.3"
     }
+  },
+  "routes": [
+      { 
+        "src": "/api/classify-number", 
+        "dest": "/api/index.php",
+        "headers": { 
+          "Content-Type": "application/json; charset=utf-8"
+        }
+      }
+  ],
+  "build": {
+    "env": {
+      "NOW_PHP_DEBUG": "1"
+    }
+  }
 }
-  
